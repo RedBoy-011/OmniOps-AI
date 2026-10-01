@@ -1,0 +1,6 @@
+{
+  "name": "OmniOps AI - Distributed OS Installer",
+  "description": "Unified Bash installation wizard, terminal simulator, and automated deployment suite for the OmniOps AI distributed AI operating system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
