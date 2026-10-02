@@ -31,23 +31,45 @@ import { INITIAL_USER_PROFILE, INITIAL_CONNECTED_AGENTS } from '../data/agentSto
 import { LocalModelManagerModal } from './LocalModelManagerModal';
 import { MultiServerNodeConnectModal } from './MultiServerNodeConnectModal';
 import { DomainSslSetupModal } from './DomainSslSetupModal';
+import { useLiveMetrics } from '../hooks/useLiveMetrics';
 
 interface MasterControlDashboardProps {
   onNavigateToTab: (tab: any, agentId?: string) => void;
+  initialModalOpen?: 'local_models' | 'server2' | 'domain_ssl' | null;
+  onClearInitialModal?: () => void;
 }
 
 export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({
-  onNavigateToTab
+  onNavigateToTab,
+  initialModalOpen,
+  onClearInitialModal
 }) => {
   const [copiedToken, setCopiedToken] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [activeLogTab, setActiveLogTab] = useState<'all' | 'agent' | 'router' | 'proxy'>('all');
   const [pingStatus, setPingStatus] = useState<string | null>(null);
 
+  // Interval-based live metrics hook
+  const { metrics, isLive, toggleLive, triggerManualRefresh } = useLiveMetrics(true, 2500);
+
   // Modal states baraye amaliate pishrafte (Local Models, Server 2 Connect, Domain & SSL)
   const [showLocalModelsModal, setShowLocalModelsModal] = useState(false);
   const [showServer2Modal, setShowServer2Modal] = useState(false);
   const [showDomainSslModal, setShowDomainSslModal] = useState(false);
+
+  // Respond to search-driven modal opens
+  useEffect(() => {
+    if (initialModalOpen === 'local_models') {
+      setShowLocalModelsModal(true);
+      onClearInitialModal?.();
+    } else if (initialModalOpen === 'server2') {
+      setShowServer2Modal(true);
+      onClearInitialModal?.();
+    } else if (initialModalOpen === 'domain_ssl') {
+      setShowDomainSslModal(true);
+      onClearInitialModal?.();
+    }
+  }, [initialModalOpen, onClearInitialModal]);
 
   const copyToken = () => {
     navigator.clipboard.writeText(INITIAL_USER_PROFILE.pairingToken);
@@ -57,6 +79,7 @@ export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({
 
   const handleRefreshCluster = () => {
     setRefreshing(true);
+    triggerManualRefresh();
     setTimeout(() => setRefreshing(false), 500);
   };
 
@@ -102,13 +125,30 @@ export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
+            {/* Dokmeye Toggle Live Data */}
+            <button
+              onClick={toggleLive}
+              className={`px-3 py-2 rounded-2xl border transition-all cursor-pointer flex items-center gap-2 text-xs font-semibold ${
+                isLive
+                  ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-200 shadow-lg shadow-emerald-950/50'
+                  : 'bg-black/40 border-white/10 text-neutral-400 hover:text-white hover:border-white/20'
+              }`}
+              title={isLive ? 'بروزرسانی زنده فعال است (هر ۲.۵ ثانیه) - کلیک برای توقف' : 'بروزرسانی زنده متوقف است - کلیک برای پخش زنده'}
+            >
+              <span className={`w-2.5 h-2.5 rounded-full ${isLive ? 'bg-emerald-400 animate-pulse' : 'bg-neutral-600'}`} />
+              <span className="hidden sm:inline">داده‌های زنده:</span>
+              <span className={`font-mono text-[11px] ${isLive ? 'text-emerald-300 font-bold' : 'text-neutral-500'}`}>
+                {isLive ? 'فعال (۲.۵s)' : 'متوقف'}
+              </span>
+            </button>
+
             <button
               onClick={handleRefreshCluster}
               disabled={refreshing}
               className="p-2.5 rounded-2xl glass-surface hover:bg-white/10 text-neutral-300 hover:text-white transition-all cursor-pointer"
-              title="بازخوانی کلاستر"
+              title="بازخوانی فوری کلاستر"
             >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-cyan-400' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${refreshing || (isLive && metrics.isPulsing) ? 'animate-spin text-cyan-400' : ''}`} />
             </button>
             <button
               onClick={handleBroadcastPing}
@@ -223,129 +263,174 @@ export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({
         </div>
       </div>
 
-      {/* 2. Gauges & Stats Grid (CPU, RAM, Disk, AI Throughput) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* CPU Usage Gauge */}
-        <div className="p-5 rounded-3xl glass-surface border border-white/10 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-neutral-400 font-medium">مصرف پردازنده مرکزی:</span>
-            <div className="text-2xl font-black text-white font-mono" dir="ltr">12%</div>
-            <span className="text-[10px] text-emerald-400 font-mono">16 vCPUs AMD EPYC</span>
+      {/* 2. Gauges & Stats Grid (CPU, RAM, Disk, AI Throughput) ba Live Data Toggle */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+          <div className="flex items-center gap-2">
+            <Activity className={`w-4 h-4 ${isLive ? 'text-emerald-400 animate-pulse' : 'text-neutral-500'}`} />
+            <h3 className="text-xs sm:text-sm font-bold text-white">
+              پایش بلادرنگ مصرف سخت‌افزاری کلاستر (Cluster Resource Telemetry)
+            </h3>
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+              isLive ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-neutral-800 border-neutral-700 text-neutral-400'
+            }`}>
+              {isLive ? '● Live Auto-Refresh Active (2.5s)' : '○ Auto-Refresh Paused'}
+            </span>
           </div>
 
-          <div className="relative w-14 h-14 flex items-center justify-center">
-            <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-neutral-800"
-                strokeWidth="3.5"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="text-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.6)]"
-                strokeDasharray="12, 100"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-            <Cpu className="w-5 h-5 text-cyan-400 absolute" />
-          </div>
-        </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] text-neutral-400 font-mono">
+              آخرین ثبت: <span className="text-cyan-300 font-bold">{metrics.lastRefreshedAt}</span>
+            </span>
 
-        {/* RAM Usage Gauge */}
-        <div className="p-5 rounded-3xl glass-surface border border-white/10 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-neutral-400 font-medium">مصرف حافظه RAM سرور:</span>
-            <div className="text-2xl font-black text-white font-mono" dir="ltr">1.4 / 16 GB</div>
-            <span className="text-[10px] text-cyan-400 font-mono">Fast DDR5 ECC</span>
-          </div>
-
-          <div className="relative w-14 h-14 flex items-center justify-center">
-            <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-neutral-800"
-                strokeWidth="3.5"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.6)]"
-                strokeDasharray="9, 100"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-            <Activity className="w-5 h-5 text-emerald-400 absolute" />
+            <button
+              onClick={toggleLive}
+              className={`px-3 py-1 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all cursor-pointer ${
+                isLive
+                  ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900'
+                  : 'bg-neutral-900 border-white/10 text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Radio className={`w-3 h-3 ${isLive ? 'text-emerald-400 animate-pulse' : 'text-neutral-500'}`} />
+              <span>{isLive ? 'پخش زنده فعال' : 'فعال‌سازی پخش زنده'}</span>
+            </button>
           </div>
         </div>
 
-        {/* Disk Space Gauge */}
-        <div className="p-5 rounded-3xl glass-surface border border-white/10 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-neutral-400 font-medium">فضای دیسک NVMe:</span>
-            <div className="text-2xl font-black text-white font-mono" dir="ltr">48 / 250 GB</div>
-            <span className="text-[10px] text-indigo-400 font-mono">Fast NVMe SSD</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* CPU Usage Gauge */}
+          <div className="p-5 rounded-3xl glass-surface border border-white/10 flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs text-neutral-400 font-medium">مصرف پردازنده مرکزی:</span>
+              <div className="text-2xl font-black text-white font-mono flex items-center gap-1.5" dir="ltr">
+                <span>{metrics.cpuUsage}%</span>
+                {isLive && metrics.isPulsing && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping inline-block" />
+                )}
+              </div>
+              <span className="text-[10px] text-emerald-400 font-mono">16 vCPUs AMD EPYC</span>
+            </div>
+
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-neutral-800"
+                  strokeWidth="3.5"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className="text-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.6)] transition-all duration-500"
+                  strokeDasharray={`${metrics.cpuUsage}, 100`}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <Cpu className="w-5 h-5 text-cyan-400 absolute" />
+            </div>
           </div>
 
-          <div className="relative w-14 h-14 flex items-center justify-center">
-            <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-neutral-800"
-                strokeWidth="3.5"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="text-indigo-400 drop-shadow-[0_0_6px_rgba(129,140,248,0.6)]"
-                strokeDasharray="19, 100"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-            <HardDrive className="w-5 h-5 text-indigo-400 absolute" />
-          </div>
-        </div>
+          {/* RAM Usage Gauge */}
+          <div className="p-5 rounded-3xl glass-surface border border-white/10 flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs text-neutral-400 font-medium">مصرف حافظه RAM سرور:</span>
+              <div className="text-2xl font-black text-white font-mono" dir="ltr">
+                {metrics.ramUsedGb} / {metrics.ramTotalGb} GB
+              </div>
+              <span className="text-[10px] text-cyan-400 font-mono">Fast DDR5 ECC</span>
+            </div>
 
-        {/* AI Routing Throughput */}
-        <div className="p-5 rounded-3xl glass-surface border border-white/10 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-neutral-400 font-medium">ترافیک روتینگ هوش مصنوعی:</span>
-            <div className="text-2xl font-black text-white font-mono" dir="ltr">142 t/s</div>
-            <span className="text-[10px] text-cyan-400 font-mono">DeepSeek V4 Active</span>
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-neutral-800"
+                  strokeWidth="3.5"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className="text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.6)] transition-all duration-500"
+                  strokeDasharray={`${Math.round((metrics.ramUsedGb / metrics.ramTotalGb) * 100)}, 100`}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <Activity className="w-5 h-5 text-emerald-400 absolute" />
+            </div>
           </div>
 
-          <div className="relative w-14 h-14 flex items-center justify-center">
-            <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-neutral-800"
-                strokeWidth="3.5"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="text-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.6)]"
-                strokeDasharray="85, 100"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-            <Zap className="w-5 h-5 text-cyan-400 absolute" />
+          {/* Disk Space Gauge */}
+          <div className="p-5 rounded-3xl glass-surface border border-white/10 flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs text-neutral-400 font-medium">فضای دیسک NVMe:</span>
+              <div className="text-2xl font-black text-white font-mono" dir="ltr">
+                {metrics.diskUsedGb} / {metrics.diskTotalGb} GB
+              </div>
+              <span className="text-[10px] text-indigo-400 font-mono">Fast NVMe SSD</span>
+            </div>
+
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-neutral-800"
+                  strokeWidth="3.5"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className="text-indigo-400 drop-shadow-[0_0_6px_rgba(129,140,248,0.6)] transition-all duration-500"
+                  strokeDasharray={`${Math.round((metrics.diskUsedGb / metrics.diskTotalGb) * 100)}, 100`}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <HardDrive className="w-5 h-5 text-indigo-400 absolute" />
+            </div>
+          </div>
+
+          {/* AI Routing Throughput */}
+          <div className="p-5 rounded-3xl glass-surface border border-white/10 flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs text-neutral-400 font-medium">ترافیک روتینگ هوش مصنوعی:</span>
+              <div className="text-2xl font-black text-white font-mono" dir="ltr">
+                {metrics.aiThroughput} t/s
+              </div>
+              <span className="text-[10px] text-cyan-400 font-mono">DeepSeek V4 Active</span>
+            </div>
+
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-neutral-800"
+                  strokeWidth="3.5"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className="text-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.6)] transition-all duration-500"
+                  strokeDasharray={`${Math.min(100, Math.round((metrics.aiThroughput / 190) * 100))}, 100`}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <Zap className="w-5 h-5 text-cyan-400 absolute" />
+            </div>
           </div>
         </div>
       </div>
@@ -408,11 +493,16 @@ export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({
                   </td>
                   <td className="p-3">
                     <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      {agent.latency} (Online)
+                      <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-600'}`} />
+                      {agent.id === 'agent-win-workstation'
+                        ? `${metrics.nodeLatencies.winWorkstation}ms`
+                        : `${metrics.nodeLatencies.winLaptop}ms`
+                      } (Online)
                     </span>
                   </td>
-                  <td className="p-3 text-[11px] text-neutral-400">{agent.lastHeartbeat}</td>
+                  <td className="p-3 text-[11px] text-neutral-400">
+                    {isLive ? metrics.lastRefreshedAt : agent.lastHeartbeat}
+                  </td>
                   <td className="p-3 text-center">
                     <button
                       onClick={() => onNavigateToTab('agent', agent.id)}
@@ -439,7 +529,7 @@ export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({
               <Server className="w-4 h-4 text-cyan-400" />
               <span>نودهای سرور و زیرساخت کلاستر (Active Cluster Topology)</span>
             </h3>
-            <span className="text-xs text-neutral-400 font-mono">3 Infrastructure Nodes Active</span>
+            <span className="text-xs text-neutral-400 font-mono">4 Infrastructure Nodes Active</span>
           </div>
 
           <div className="space-y-3">
@@ -447,10 +537,18 @@ export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({
               {
                 name: 'Master Control-Plane (Hetzner Dedicated)',
                 role: 'FastAPI Core + PostgreSQL 16 + Redis',
-                ip: '192.168.1.10',
+                ip: '192.168.1.10:8000',
                 status: 'Online',
-                latency: '12ms',
+                latency: `${metrics.nodeLatencies.master}ms`,
                 badge: 'Primary Core'
+              },
+              {
+                name: 'Edge Worker #1 (GPU Runner RTX 4090)',
+                role: 'vLLM + Ollama Server 2 Cluster Node',
+                ip: '192.168.1.55:9090',
+                status: 'Online',
+                latency: `${metrics.nodeLatencies.edgeGpu}ms`,
+                badge: 'Server 2 GPU'
               },
               {
                 name: 'OmniRoute AI Router Core',

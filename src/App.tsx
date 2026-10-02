@@ -26,6 +26,7 @@ import { OmniRouteHub } from './components/OmniRouteHub';
 import { AIProvidersHub } from './components/AIProvidersHub';
 import { WindowsAgentHub } from './components/WindowsAgentHub';
 import { UserPortal } from './components/UserPortal';
+import { GlobalHeaderSearch, SearchResultItem } from './components/GlobalHeaderSearch';
 
 export default function App() {
   // Karbare vared-shode: Dar halate noskheye kham (Zero State) ebteda safheye Login namayesh dade mishavad
@@ -37,11 +38,26 @@ export default function App() {
   // Eyjente Entekhab-shode baraye ertebat va ersale dastoor
   const [selectedAgentForChat, setSelectedAgentForChat] = useState<string>('agent-win-workstation');
 
+  // Modal e Baz-shode az tarighe Search e Sarāsari (Global Search)
+  const [activeModalFromSearch, setActiveModalFromSearch] = useState<'local_models' | 'server2' | 'domain_ssl' | null>(null);
+
   const handleNavigateToAgentChat = (agentId?: string) => {
     if (agentId) {
       setSelectedAgentForChat(agentId);
     }
     setActiveTab('agent');
+  };
+
+  const handleSearchResultSelect = (result: SearchResultItem) => {
+    if (result.agentId) {
+      setSelectedAgentForChat(result.agentId);
+      setActiveTab('agent');
+    } else if (result.actionModal) {
+      setActiveModalFromSearch(result.actionModal);
+      setActiveTab('dashboard');
+    } else {
+      setActiveTab(result.tab);
+    }
   };
 
   // Sidebar e jam-shavande (Collapsible Glass Sidebar)
@@ -231,10 +247,10 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 z-10">
         
         {/* Topbar e Shishei (Glassmorphic Header Bar) */}
-        <header className="sticky top-0 z-30 glass-surface border-b border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between backdrop-blur-2xl">
+        <header className="sticky top-0 z-30 glass-surface border-b border-white/10 px-4 sm:px-8 py-3 flex items-center justify-between backdrop-blur-2xl gap-3">
           
           {/* Rast: Mobile Menu Toggle va Onvane Bakhsh */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-xl bg-neutral-900 border border-white/10 text-neutral-300 hover:text-white cursor-pointer"
@@ -247,19 +263,24 @@ export default function App() {
               <span className="text-xs sm:text-sm font-bold text-white tracking-tight">
                 {navigationItems.find(n => n.id === activeTab)?.label}
               </span>
-              <span className="text-neutral-600 hidden sm:inline">|</span>
-              <span className="text-xs font-mono text-cyan-400 hidden sm:inline">
+              <span className="text-neutral-600 hidden lg:inline">|</span>
+              <span className="text-xs font-mono text-cyan-400 hidden lg:inline">
                 OpenRouter DeepSeek V4 Flash Active
               </span>
             </div>
           </div>
 
+          {/* Markaz: Jostejooye Sarāsari (Global Search across Nodes, Agents & Settings) */}
+          <div className="flex-1 max-w-sm sm:max-w-md mx-auto flex justify-center">
+            <GlobalHeaderSearch onSelectResult={handleSearchResultSelect} />
+          </div>
+
           {/* Chap: Dokmehaye Akshan (User View, Logout) */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 shrink-0">
             {/* Dokmeye Taghir be Namaye Karbare Ma'mooli baraye Test */}
             <button
               onClick={() => setCurrentUser({ email: 'user@omniops.ai', role: 'Standard User' })}
-              className="px-2.5 py-1.5 text-xs font-semibold text-purple-300 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/50 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+              className="hidden sm:flex px-2.5 py-1.5 text-xs font-semibold text-purple-300 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/50 rounded-xl transition-all cursor-pointer items-center gap-1.5"
               title="مشاهده محیط کاربر معمولی (فقط چت، مدل‌ها و ایجنت ویندوز خود)"
             >
               <User className="w-3.5 h-3.5" />
@@ -318,6 +339,8 @@ export default function App() {
                   setActiveTab(tab);
                 }
               }}
+              initialModalOpen={activeModalFromSearch}
+              onClearInitialModal={() => setActiveModalFromSearch(null)}
             />
           )}
 
