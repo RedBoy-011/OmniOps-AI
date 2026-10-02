@@ -1,17 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Server,
   Route,
   Wrench,
   Zap,
-  Download,
-  ExternalLink,
   LogOut,
   User,
-  Github,
-  BookOpen,
-  Copy,
-  Check,
   Cpu,
   Layers,
   Bot,
@@ -22,8 +16,7 @@ import {
   Menu,
   X,
   ShieldCheck,
-  Activity,
-  Terminal
+  Activity
 } from 'lucide-react';
 import { AuthScreen } from './components/AuthScreen';
 import { MasterControlDashboard } from './components/MasterControlDashboard';
@@ -33,19 +26,10 @@ import { OmniRouteHub } from './components/OmniRouteHub';
 import { AIProvidersHub } from './components/AIProvidersHub';
 import { WindowsAgentHub } from './components/WindowsAgentHub';
 import { UserPortal } from './components/UserPortal';
-import { OneLinerInstallGuideModal } from './components/OneLinerInstallGuideModal';
-import { RAW_INSTALL_SCRIPT } from './data/installScript';
 
 export default function App() {
-  // In state baraye etelaate karbare vared-shode ast
-  const [currentUser, setCurrentUser] = useState<{ email: string; role: string } | null>({
-    email: 'admin@omniops.ai',
-    role: 'Master Cluster Administrator'
-  });
-
-  // Modal e Dastoorate Tak-khattiye Nasb
-  const [installGuideOpen, setInstallGuideOpen] = useState(false);
-  const [installGuideTab, setInstallGuideTab] = useState<'linux' | 'windows' | 'docker' | 'worker' | 'python' | 'socks'>('linux');
+  // Karbare vared-shode: Dar halate noskheye kham (Zero State) ebteda safheye Login namayesh dade mishavad
+  const [currentUser, setCurrentUser] = useState<{ email: string; role: string } | null>(null);
 
   // Tab e fa'ale barname (Master Dashboard, Agent Chat, MCP, OmniRoute, Providers, Windows Agent)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'agent' | 'mcp' | 'omniroute' | 'providers' | 'windows'>('dashboard');
@@ -64,32 +48,13 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Kopi kardane dastoor e curl
-  const [copiedCurl, setCopiedCurl] = useState(false);
-
-  const officialCurlCommand = 'curl -sL https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/install.sh | bash';
-
-  const copyCurl = () => {
-    navigator.clipboard.writeText(officialCurlCommand);
-    setCopiedCurl(true);
-    setTimeout(() => setCopiedCurl(false), 2000);
-  };
-
-  const downloadScriptFile = () => {
-    const blob = new Blob([RAW_INSTALL_SCRIPT], { type: 'text/x-sh' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'install.sh';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  // Agar karbar logout kard, safheye AuthScreen namayesh dade mishavad
+  // Agar karbar vared nashode bashad, safheye Login (AuthScreen) namayesh dade mishavad
   if (!currentUser) {
-    return <AuthScreen onLoginSuccess={(user) => setCurrentUser(user)} />;
+    return (
+      <AuthScreen
+        onLoginSuccess={(user) => setCurrentUser(user)}
+      />
+    );
   }
 
   // Agar Karbare Ma'mooli (Standard User) vared shod, faghat UserPortal namayesh dade mishavad!
@@ -289,24 +254,12 @@ export default function App() {
             </div>
           </div>
 
-          {/* Chap: Dokmehaye Akshan (One-Liners Hub, User View, Curl, Download, Logout) */}
-          <div className="flex items-center gap-2">
-            
-            {/* Dokmeye Markaze Dastoorate Tak-khattiye Nasb */}
-            <button
-              onClick={() => { setInstallGuideTab('linux'); setInstallGuideOpen(true); }}
-              className="px-2.5 sm:px-3 py-1.5 text-xs font-bold text-cyan-200 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm shadow-cyan-950/50"
-              title="مشاهده تمامی دستورات نصب تک‌خطی سرور، ویندوز، داکر و نودها همراه با راهنما"
-            >
-              <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-              <span>نصب تک‌خطی‌ها</span>
-              <span className="hidden xl:inline text-[9px] font-mono px-1 rounded bg-cyan-500/30 text-cyan-200">Hub</span>
-            </button>
-
-            {/* Dokmeye Taghir be Namaye Karbare Ma'mooli */}
+          {/* Chap: Dokmehaye Akshan (User View, Logout) */}
+          <div className="flex items-center gap-2.5">
+            {/* Dokmeye Taghir be Namaye Karbare Ma'mooli baraye Test */}
             <button
               onClick={() => setCurrentUser({ email: 'user@omniops.ai', role: 'Standard User' })}
-              className="hidden lg:flex px-2.5 py-1.5 text-xs font-semibold text-purple-300 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/50 rounded-xl transition-all cursor-pointer items-center gap-1.5"
+              className="px-2.5 py-1.5 text-xs font-semibold text-purple-300 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/50 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
               title="مشاهده محیط کاربر معمولی (فقط چت، مدل‌ها و ایجنت ویندوز خود)"
             >
               <User className="w-3.5 h-3.5" />
@@ -314,28 +267,12 @@ export default function App() {
             </button>
 
             <button
-              onClick={copyCurl}
-              className="hidden sm:flex px-2.5 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/30 rounded-xl transition-all cursor-pointer items-center gap-1.5 shadow-sm font-mono"
-              title="کپی دستور رسمی curl برای نصب در سرور لینوکس"
-            >
-              {copiedCurl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>curl install.sh</span>
-            </button>
-
-            <button
-              onClick={downloadScriptFile}
-              className="px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-cyan-950/70"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">دانلود install.sh</span>
-            </button>
-
-            <button
               onClick={() => setCurrentUser(null)}
-              className="p-1.5 rounded-xl bg-red-950/30 hover:bg-red-900/40 text-red-300 border border-red-800/40 transition-colors cursor-pointer"
+              className="p-1.5 px-2.5 rounded-xl bg-red-950/30 hover:bg-red-900/50 text-red-300 border border-red-800/40 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-medium"
               title="خروج از حساب"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">خروج</span>
             </button>
           </div>
         </header>
@@ -381,10 +318,6 @@ export default function App() {
                   setActiveTab(tab);
                 }
               }}
-              onOpenInstallGuide={(tab) => {
-                if (tab) setInstallGuideTab(tab);
-                setInstallGuideOpen(true);
-              }}
             />
           )}
 
@@ -407,21 +340,10 @@ export default function App() {
           {activeTab === 'windows' && (
             <WindowsAgentHub
               onNavigateToAgentChat={handleNavigateToAgentChat}
-              onOpenInstallGuide={(tab) => {
-                if (tab) setInstallGuideTab(tab);
-                setInstallGuideOpen(true);
-              }}
             />
           )}
         </main>
       </div>
-
-      {/* Modal e Jame'e Dastoorate Tak-khattiye Nasb va Rahnamaye Esteghrar */}
-      <OneLinerInstallGuideModal
-        isOpen={installGuideOpen}
-        onClose={() => setInstallGuideOpen(false)}
-        initialTab={installGuideTab}
-      />
 
     </div>
   );

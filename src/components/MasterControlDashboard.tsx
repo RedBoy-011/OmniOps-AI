@@ -24,54 +24,30 @@ import {
   MessageSquare,
   Key,
   Lock,
-  Send
+  Send,
+  Network
 } from 'lucide-react';
 import { INITIAL_USER_PROFILE, INITIAL_CONNECTED_AGENTS } from '../data/agentStore';
+import { LocalModelManagerModal } from './LocalModelManagerModal';
+import { MultiServerNodeConnectModal } from './MultiServerNodeConnectModal';
+import { DomainSslSetupModal } from './DomainSslSetupModal';
 
 interface MasterControlDashboardProps {
   onNavigateToTab: (tab: any, agentId?: string) => void;
-  onOpenInstallGuide?: (tab?: 'linux' | 'windows' | 'docker' | 'worker' | 'python' | 'socks') => void;
 }
 
-export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({ onNavigateToTab, onOpenInstallGuide }) => {
-  const [copiedCurl, setCopiedCurl] = useState(false);
-  const [copiedPs, setCopiedPs] = useState(false);
-  const [copiedDocker, setCopiedDocker] = useState(false);
-  const [copiedWorker, setCopiedWorker] = useState(false);
+export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({
+  onNavigateToTab
+}) => {
   const [copiedToken, setCopiedToken] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [activeLogTab, setActiveLogTab] = useState<'all' | 'agent' | 'router' | 'proxy'>('all');
   const [pingStatus, setPingStatus] = useState<string | null>(null);
 
-  // Dastoorate rasmiye nasb
-  const curlCommand = 'curl -sL https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/install.sh | bash';
-  const psCommand = `irm https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/windows-agent/install-agent.ps1 | iex -Token "${INITIAL_USER_PROFILE.pairingToken}" -User "${INITIAL_USER_PROFILE.email}"`;
-  const dockerCommand = 'curl -sSL https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/docker-compose.yml -o docker-compose.yml && docker compose up -d';
-  const workerCommand = `curl -sL https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/install.sh | bash -s -- --role worker --master https://hub.omniops.ai:9090 --token "${INITIAL_USER_PROFILE.pairingToken}"`;
-
-  const copyCurl = () => {
-    navigator.clipboard.writeText(curlCommand);
-    setCopiedCurl(true);
-    setTimeout(() => setCopiedCurl(false), 2000);
-  };
-
-  const copyPs = () => {
-    navigator.clipboard.writeText(psCommand);
-    setCopiedPs(true);
-    setTimeout(() => setCopiedPs(false), 2000);
-  };
-
-  const copyDocker = () => {
-    navigator.clipboard.writeText(dockerCommand);
-    setCopiedDocker(true);
-    setTimeout(() => setCopiedDocker(false), 2000);
-  };
-
-  const copyWorker = () => {
-    navigator.clipboard.writeText(workerCommand);
-    setCopiedWorker(true);
-    setTimeout(() => setCopiedWorker(false), 2000);
-  };
+  // Modal states baraye amaliate pishrafte (Local Models, Server 2 Connect, Domain & SSL)
+  const [showLocalModelsModal, setShowLocalModelsModal] = useState(false);
+  const [showServer2Modal, setShowServer2Modal] = useState(false);
+  const [showDomainSslModal, setShowDomainSslModal] = useState(false);
 
   const copyToken = () => {
     navigator.clipboard.writeText(INITIAL_USER_PROFILE.pairingToken);
@@ -151,111 +127,97 @@ export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({ 
           </div>
         )}
 
-        {/* Dastoorate Tak-khattiye Nasb (Quickstart One-Liners Hub) */}
-        <div className="space-y-3 pt-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-2">
+        {/* Bakhshe Amaliate Pishrafte: Modelhaye Local, Server 2 (Clustering), Domain & SSL */}
+        <div className="pt-2 space-y-3">
+          <div className="flex items-center justify-between border-b border-white/5 pb-2">
             <div className="flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-cyan-400" />
+              <Sparkles className="w-4 h-4 text-cyan-400" />
               <span className="text-xs sm:text-sm font-bold text-white">
-                دستورات استقرار سریع با یک خط (Production One-Liners)
+                ماژول‌های عملیاتی کلاستر و هوش مصنوعی (Cluster Operations & Infrastructure)
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">
-                4 Runtimes Ready
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
+                Ready for Production
               </span>
             </div>
-
-            <button
-              onClick={() => onOpenInstallGuide?.('linux')}
-              className="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 cursor-pointer transition-colors"
-            >
-              <span>مشاهده راهنمای تفصیلی، پیش‌نیازها و عیب‌یابی تک‌خطی‌ها</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
-            {/* 1. Linux One-Liner */}
-            <div className="p-4 rounded-2xl glass-surface border border-white/5 space-y-2 hover:border-emerald-500/30 transition-all">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-white flex items-center gap-1.5">
-                  <Terminal className="w-4 h-4 text-emerald-400" />
-                  <span>سرور لینوکس (Master All-in-One Installer)</span>
-                </span>
-                <span className="text-[10px] font-mono text-emerald-400">Bash One-Liner</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {/* Card 1: Local AI Models Manager */}
+            <div className="p-4 sm:p-5 rounded-2xl glass-surface border border-cyan-500/20 hover:border-cyan-500/50 transition-all space-y-3 flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-400">
+                    <Cpu className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">
+                    Ollama / vLLM
+                  </span>
+                </div>
+                <h4 className="text-xs sm:text-sm font-bold text-white">نصب و دانلود مدل‌های محلی (Local Models)</h4>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                  دانلود مستقیم مدل‌های DeepSeek R1، Llama 3.3 و Qwen با نمایش زنده درصد و سرعت دانلود و اتصال به OmniRoute.
+                </p>
               </div>
-              <div className="p-2.5 bg-black/60 border border-neutral-800 rounded-xl flex items-center justify-between gap-2 text-xs font-mono text-emerald-400" dir="ltr">
-                <span className="truncate select-all">{curlCommand}</span>
-                <button
-                  onClick={copyCurl}
-                  className="px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg text-[11px] cursor-pointer shrink-0 flex items-center gap-1 transition-colors font-sans"
-                >
-                  {copiedCurl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedCurl ? 'کپی شد' : 'کپی'}</span>
-                </button>
-              </div>
+
+              <button
+                onClick={() => setShowLocalModelsModal(true)}
+                className="w-full py-2 px-3 rounded-xl bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-200 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <Cpu className="w-3.5 h-3.5" />
+                <span>مدیریت و دانلود مدل‌ها</span>
+              </button>
             </div>
 
-            {/* 2. Windows PowerShell One-Liner with User Token */}
-            <div className="p-4 rounded-2xl glass-surface border border-purple-900/30 space-y-2 hover:border-purple-500/40 transition-all">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-white flex items-center gap-1.5">
-                  <Laptop className="w-4 h-4 text-purple-400" />
-                  <span>ایجنت همیار ویندوز با توکن امن کاربر</span>
-                </span>
-                <span className="text-[10px] font-mono text-purple-400">PowerShell</span>
+            {/* Card 2: Server 2 & Multi-Server Clustering */}
+            <div className="p-4 sm:p-5 rounded-2xl glass-surface border border-purple-500/20 hover:border-purple-500/50 transition-all space-y-3 flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-400">
+                    <Network className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
+                    Server 2 (GPU)
+                  </span>
+                </div>
+                <h4 className="text-xs sm:text-sm font-bold text-white">اتصال سرور دوم و نودهای ورکر (Clustering)</h4>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                  اتصال سرور دوم و کارت‌های گرافیک GPU به سرور اول، تولید دستور اتصال با توکن و مانیتورینگ بلادرنگ تاخیر.
+                </p>
               </div>
-              <div className="p-2.5 bg-black/60 border border-neutral-800 rounded-xl flex items-center justify-between gap-2 text-xs font-mono text-purple-300" dir="ltr">
-                <span className="truncate select-all">{psCommand}</span>
-                <button
-                  onClick={copyPs}
-                  className="px-2.5 py-1 bg-purple-900/60 hover:bg-purple-800 text-white rounded-lg text-[11px] cursor-pointer shrink-0 flex items-center gap-1 transition-colors font-sans"
-                >
-                  {copiedPs ? <Check className="w-3 h-3 text-purple-400" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedPs ? 'کپی شد' : 'کپی'}</span>
-                </button>
-              </div>
+
+              <button
+                onClick={() => setShowServer2Modal(true)}
+                className="w-full py-2 px-3 rounded-xl bg-purple-950/70 hover:bg-purple-900 border border-purple-500/40 text-purple-200 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <Network className="w-3.5 h-3.5" />
+                <span>اتصال و مدیریت سرور دوم</span>
+              </button>
             </div>
 
-            {/* 3. Docker Compose One-Liner */}
-            <div className="p-4 rounded-2xl glass-surface border border-blue-900/30 space-y-2 hover:border-blue-500/40 transition-all">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-white flex items-center gap-1.5">
-                  <Database className="w-4 h-4 text-blue-400" />
-                  <span>استک داکر کمپوز پروداکشن (Docker Compose Stack)</span>
-                </span>
-                <span className="text-[10px] font-mono text-blue-400">Containers</span>
+            {/* Card 3: Domain & Let's Encrypt SSL */}
+            <div className="p-4 sm:p-5 rounded-2xl glass-surface border border-emerald-500/20 hover:border-emerald-500/50 transition-all space-y-3 flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
+                    <Globe className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
+                    Let's Encrypt SSL
+                  </span>
+                </div>
+                <h4 className="text-xs sm:text-sm font-bold text-white">دامنه اینترنتی و SSL خودکار (HTTPS)</h4>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                  ثبت دامین، اجرای خودکار اسکریپت Certbot برای دریافت گواهی رایگان Let's Encrypt و کانفیگ Nginx Reverse Proxy.
+                </p>
               </div>
-              <div className="p-2.5 bg-black/60 border border-neutral-800 rounded-xl flex items-center justify-between gap-2 text-xs font-mono text-blue-300" dir="ltr">
-                <span className="truncate select-all">{dockerCommand}</span>
-                <button
-                  onClick={copyDocker}
-                  className="px-2.5 py-1 bg-blue-900/60 hover:bg-blue-800 text-white rounded-lg text-[11px] cursor-pointer shrink-0 flex items-center gap-1 transition-colors font-sans"
-                >
-                  {copiedDocker ? <Check className="w-3 h-3 text-blue-400" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedDocker ? 'کپی شد' : 'کپی'}</span>
-                </button>
-              </div>
-            </div>
 
-            {/* 4. GPU Edge Worker Node One-Liner */}
-            <div className="p-4 rounded-2xl glass-surface border border-emerald-900/30 space-y-2 hover:border-emerald-500/40 transition-all">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-white flex items-center gap-1.5">
-                  <Cpu className="w-4 h-4 text-emerald-400" />
-                  <span>اتصال نود ورکر لبه / سرورهای GPU به کلاستر</span>
-                </span>
-                <span className="text-[10px] font-mono text-emerald-400">Edge Worker</span>
-              </div>
-              <div className="p-2.5 bg-black/60 border border-neutral-800 rounded-xl flex items-center justify-between gap-2 text-xs font-mono text-emerald-300" dir="ltr">
-                <span className="truncate select-all">{workerCommand}</span>
-                <button
-                  onClick={copyWorker}
-                  className="px-2.5 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-white rounded-lg text-[11px] cursor-pointer shrink-0 flex items-center gap-1 transition-colors font-sans"
-                >
-                  {copiedWorker ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedWorker ? 'کپی شد' : 'کپی'}</span>
-                </button>
-              </div>
+              <button
+                onClick={() => setShowDomainSslModal(true)}
+                className="w-full py-2 px-3 rounded-xl bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-200 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>پیکربندی دامنه و SSL</span>
+              </button>
             </div>
           </div>
         </div>
@@ -584,6 +546,24 @@ export const MasterControlDashboard: React.FC<MasterControlDashboardProps> = ({ 
         </div>
 
       </div>
+
+      {/* Modal e Modiriat va Downloade Modelhaye Mahalli (Local AI) */}
+      <LocalModelManagerModal
+        isOpen={showLocalModelsModal}
+        onClose={() => setShowLocalModelsModal(false)}
+      />
+
+      {/* Modal e Etesal e Server 2 va Khoushebani (Multi-Server Clustering) */}
+      <MultiServerNodeConnectModal
+        isOpen={showServer2Modal}
+        onClose={() => setShowServer2Modal(false)}
+      />
+
+      {/* Modal e Domain va Let's Encrypt SSL (HTTPS) */}
+      <DomainSslSetupModal
+        isOpen={showDomainSslModal}
+        onClose={() => setShowDomainSslModal(false)}
+      />
 
     </div>
   );

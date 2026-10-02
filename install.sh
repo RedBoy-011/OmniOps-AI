@@ -949,8 +949,50 @@ install_master() {
     local app_dir="${INSTALL_BASE_DIR}/master"
     log_step "Starting Installation: Master Control-Plane..."
 
+    # Tolide Tokenha va Code-haye Amniatiye Sakht-e Karbar
+    local setup_code="OMNI-$(openssl rand -hex 2 2>/dev/null || echo 'A9F4' | tr '[:lower:]' '[:upper:]')-$(openssl rand -hex 2 2>/dev/null || echo '77D2' | tr '[:lower:]' '[:upper:]')-$(openssl rand -hex 2 2>/dev/null || echo 'E801' | tr '[:lower:]' '[:upper:]')"
+    local admin_pass="OmniPass_$(openssl rand -hex 4 2>/dev/null || echo '2026')!"
+    local join_token="omni_join_sec_$(openssl rand -hex 8 2>/dev/null || echo '8f49a2e1d7c3b091')"
+    local server_ip
+    server_ip=$(curl -s -m 3 https://api.ipify.org 2>/dev/null || hostname -I | awk '{print $1}')
+
     generate_env_file "$app_dir" "Master Control-Plane"
     generate_docker_compose "$app_dir"
+
+    # Zakhireye Tokenha dar file .env
+    $SUDO bash -c "cat >> ${app_dir}/.env" << EOF
+
+# Master Admin Security Credentials
+OMNIOPS_SETUP_CODE="${setup_code}"
+OMNIOPS_INITIAL_ADMIN_EMAIL="admin@omniops.ai"
+OMNIOPS_INITIAL_ADMIN_PASS="${admin_pass}"
+OMNIOPS_CLUSTER_JOIN_TOKEN="${join_token}"
+OMNIOPS_SERVER_PUBLIC_IP="${server_ip}"
+EOF
+
+    # Zakhireye file e ghabele motale-e baraye admin
+    $SUDO bash -c "cat > ${app_dir}/admin_credentials.txt" << EOF
+======================================================================
+  OmniOps AI Master Control-Plane - Production Security Credentials
+======================================================================
+Generated At: $(date)
+Server IP:    ${server_ip}
+Web Console:  http://${server_ip}:${MASTER_PORT} (or http://localhost:${MASTER_PORT})
+
+Admin Email:       admin@omniops.ai
+Admin Password:    ${admin_pass}
+Setup Security Key: ${setup_code}
+Cluster Join Token: ${join_token}
+
+Server 2 (GPU Worker) Connect Command:
+curl -sL https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/install.sh | bash -s -- --role worker --master http://${server_ip}:9090 --token "${join_token}"
+
+Domain & SSL (Let's Encrypt) Setup:
+apt-get update && apt-get install -y certbot python3-certbot-nginx
+certbot --nginx -d your-domain.com --agree-tos -m admin@omniops.ai --redirect
+======================================================================
+EOF
+    $SUDO chmod 600 "${app_dir}/admin_credentials.txt" 2>/dev/null || true
 
     log_step "Starting Containers via Docker Compose..."
     cd "$app_dir"
@@ -961,12 +1003,21 @@ install_master() {
 
     echo ""
     echo -e "${CLR_GREEN}======================================================================${CLR_RESET}"
-    echo -e " ${CLR_BOLD}${CLR_GREEN}Master Control-Plane ba movafaghiat nasb va rah-andazi shod!${CLR_RESET}"
+    echo -e " ${CLR_BOLD}${CLR_GREEN}✔ Master Control-Plane ba movafaghiat nasb va rah-andazi shod!${CLR_RESET}"
     echo -e "${CLR_GREEN}======================================================================${CLR_RESET}"
-    echo -e "  - Dashboard & API: ${CLR_BOLD}http://localhost:${MASTER_PORT}${CLR_RESET}"
-    echo -e "  - Health Check:    ${CLR_BOLD}http://localhost:${MASTER_PORT}/api/v1/health${CLR_RESET}"
-    echo -e "  - Config File:     ${CLR_CYAN}${app_dir}/.env${CLR_RESET}"
-    echo -e "  - Logs Command:    ${CLR_DIM}cd ${app_dir} && ${DOCKER_COMPOSE_CMD} logs -f${CLR_RESET}"
+    echo -e "  - Dashboard & API: ${CLR_BOLD}http://${server_ip}:${MASTER_PORT}${CLR_RESET} (or http://localhost:${MASTER_PORT})"
+    echo -e "  - OmniRoute AI:    ${CLR_BOLD}http://localhost:${OMNIROUTE_PORT}/v1/chat/completions${CLR_RESET}"
+    echo ""
+    echo -e "  ${CLR_BOLD}${CLR_YELLOW}[!] Moshakhasate Vorood e Admin (Yekbar Masraf baraye Claim):${CLR_RESET}"
+    echo -e "  - Admin Email:       ${CLR_BOLD}${CLR_WHITE}admin@omniops.ai${CLR_RESET}"
+    echo -e "  - Temporary Pass:    ${CLR_BOLD}${CLR_CYAN}${admin_pass}${CLR_RESET}"
+    echo -e "  - Setup Security Key: ${CLR_BOLD}${CLR_MAGENTA}${setup_code}${CLR_RESET}"
+    echo -e "  - Cluster Join Token: ${CLR_BOLD}${CLR_CYAN}${join_token}${CLR_RESET}"
+    echo -e "  - Saved Credentials: ${CLR_DIM}${app_dir}/admin_credentials.txt${CLR_RESET}"
+    echo ""
+    echo -e "  ${CLR_BOLD}${CLR_BLUE}Dastoore Etesal e Server 2 (GPU Worker Node):${CLR_RESET}"
+    echo -e "  ${CLR_DIM}curl -sL https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/install.sh | bash -s -- --role worker --master http://${server_ip}:9090 --token \"${join_token}\"${CLR_RESET}"
+    echo -e "${CLR_GREEN}======================================================================${CLR_RESET}"
     echo ""
 }
 

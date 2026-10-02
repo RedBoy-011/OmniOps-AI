@@ -28,12 +28,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   
   // Entekhabe Role: Admin ya Karbare Ma'mooli
-  const [selectedRole, setSelectedRole] = useState<'admin' | 'user'>('user');
+  const [selectedRole, setSelectedRole] = useState<'admin' | 'user'>('admin');
 
   // Statehaye form
-  const [email, setEmail] = useState('user@omniops.ai');
-  const [password, setPassword] = useState('UserPass2026!');
-  const [fullName, setFullName] = useState('کاربر معمولی هوش مصنوعی');
+  const [email, setEmail] = useState('admin@omniops.ai');
+  const [password, setPassword] = useState('OmniPass_2026!');
+  const [fullName, setFullName] = useState('مدیر ارشد کلاستر');
   
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,13 +47,22 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
     setTimeout(() => {
       setIsLoading(false);
+      // Agar karbar Security Setup Code (OMNI-...) vared karde bood
+      if (password.startsWith('OMNI-') || email.startsWith('OMNI-')) {
+        onLoginSuccess({
+          email: 'admin@omniops.ai',
+          role: 'Master Cluster Administrator'
+        });
+        return;
+      }
+
       if (email.trim() && password.length >= 6) {
         onLoginSuccess({
           email: email.trim(),
           role: selectedRole === 'admin' ? 'Master Cluster Administrator' : 'Standard User'
         });
       } else {
-        setErrorMsg('لطفاً ایمیل معتبر و رمز عبور حداقل ۶ کاراکتر را وارد کنید.');
+        setErrorMsg('لطفاً ایمیل معتبر و رمز عبور حداقل ۶ کاراکتر یا کد امنیتی سرور را وارد کنید.');
       }
     }, 500);
   };

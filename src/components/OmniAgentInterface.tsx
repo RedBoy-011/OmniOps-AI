@@ -92,54 +92,8 @@ export const OmniAgentInterface: React.FC<OmniAgentInterfaceProps> = ({ initialT
 
   const currentTargetAgent = availableAgents.find(a => a.id === targetAgentId) || availableAgents[1];
 
-  // Messagehaye ebtedaee ba nemoonehaye zende az ertebat ba Eyjente Vayndoz va Server
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'msg-1',
-      sender: 'user',
-      timestamp: '14:20:05',
-      content: 'وضعیت سخت‌افزاری دسکتاپ ویندوز را بررسی کن و یک اسکرین‌شات از صفحه ثبت کن.',
-      mode: 'task',
-      targetAgentId: 'agent-win-workstation',
-      targetAgentName: 'همیار دسکتاپ ویندوز (Workstation)'
-    },
-    {
-      id: 'msg-2',
-      sender: 'agent',
-      timestamp: '14:20:08',
-      content: 'دستور با موفقیت از پنل مرکزی از طریق تونل وب‌سوکت معکوس دریافت شد. اسکرین‌شات دسکتاپ ثبت گردید و وضعیت حافظه و پردازنده به پنل گزارش شد.',
-      mode: 'task',
-      targetAgentId: 'agent-win-workstation',
-      targetAgentName: 'همیار دسکتاپ ویندوز (Workstation)',
-      modelUsed: 'Windows Agent RPC · DeepSeek V4 Engine',
-      telemetrySnapshot: {
-        cpu: '16%',
-        ram: '5.4 / 16 GB',
-        battery: '98%',
-        latency: '14ms'
-      },
-      reasoningSteps: [
-        'گام ۱: تایید هویت پکت با توکن کاربر (omni_win_usr_taheri_8f49a2e1d7c3)',
-        'گام ۲: فراخوانی کتابخانه GDI32 برای ضبط اسکرین‌شات دسکتاپ با وضوح ۲۵۶۰ در ۱۴۴۰ پیکسل',
-        'گام ۳: دریافت وضعیت رم و سی‌پی‌یو از WMI و فشرده‌سازی در بافر امن'
-      ],
-      executedCommand: 'powershell.exe -NoProfile -Command "Import-Module OmniOps; Take-ScreenCapture -Compress; Get-CimInstance Win32_OperatingSystem | Select FreePhysicalMemory"',
-      terminalLogs: [
-        '[WIN-AGENT] Received WebSocket RPC command: capture_screen_and_telemetry',
-        '[WIN-AGENT] Validated token for user: taheri.ledari.monir@gmail.com',
-        '[WIN-GDI] Captured primary display: 2560x1440, 32-bit color depth (Size: 184KB compressed)',
-        '[SUCCESS] Command executed with exit code 0. Telemetry dispatched to Master Control.'
-      ],
-      hasScreenshot: true,
-      screenshotDetails: {
-        resolution: '2560x1440 (QHD)',
-        capturedAt: '14:20:07',
-        windowTitle: 'OmniOps Enterprise Manager - Windows 11 Desktop'
-      },
-      approvalRequired: false,
-      approvalStatus: 'approved'
-    }
-  ]);
+  // Messagehaye ebtedaee: Noskheye kham (Zero State) bedoone sabegheye chat-e pishnamayesh
+  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -382,7 +336,42 @@ export const OmniAgentInterface: React.FC<OmniAgentInterfaceProps> = ({ initialT
 
       {/* 2. Mohavateye Namayeshe Payamha va Logha (Chat & Execution Display Area) */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 scrollbar-thin">
-        {messages.map((msg) => (
+        {messages.length === 0 ? (
+          <div className="h-full min-h-[340px] flex flex-col items-center justify-center text-center p-6 space-y-4 max-w-lg mx-auto animate-in fade-in">
+            <div className="p-4 rounded-3xl bg-gradient-to-tr from-cyan-500/10 via-purple-500/10 to-indigo-500/10 border border-white/10 shadow-2xl">
+              <Bot className="w-10 h-10 text-cyan-400" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-sm sm:text-base font-bold text-white">
+                کنسول فرامین و گفتگوی ایجنت آماده است (نسخه خام)
+              </h3>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                هیچ سابقه چت پیش‌نمایشی وجود ندارد. شما می‌توانید پیام یا دستور اجرایی خود را در کادر زیر بنویسید یا از فرامین سریع زیر استفاده کنید.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              <button
+                onClick={() => handleSendMessage('وضعیت سلامت سخت‌افزار، حافظه و دمای پردازنده سیستم را بررسی کن.')}
+                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-neutral-300 hover:text-white transition-all cursor-pointer"
+              >
+                📊 پایش سلامت سیستم
+              </button>
+              <button
+                onClick={() => handleSendMessage('یک اسکرین‌شات از دسکتاپ ویندوز ثبت کن و به پنل ارسال نما.')}
+                className="px-3 py-1.5 rounded-xl bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/40 text-[11px] text-purple-200 transition-all cursor-pointer"
+              >
+                📸 اسکرین‌شات دسکتاپ
+              </button>
+              <button
+                onClick={() => handleSendMessage('اتصال معکوس وب‌سوکت و وضعیت تاخیر را پینگ کن.')}
+                className="px-3 py-1.5 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-800/40 text-[11px] text-cyan-200 transition-all cursor-pointer"
+              >
+                ⚡ تست تاخیر وب‌سوکت
+              </button>
+            </div>
+          </div>
+        ) : (
+          messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} max-w-4xl mx-auto`}
@@ -574,7 +563,7 @@ export const OmniAgentInterface: React.FC<OmniAgentInterfaceProps> = ({ initialT
               </div>
             )}
           </div>
-        ))}
+        )))}
 
         {isProcessing && (
           <div className="flex items-center gap-2 p-4 glass-surface rounded-2xl max-w-md mx-auto text-xs text-purple-300 animate-pulse">

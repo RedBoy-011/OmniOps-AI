@@ -38,10 +38,9 @@ import { INITIAL_USER_PROFILE, INITIAL_CONNECTED_AGENTS, ConnectedAgent } from '
 
 interface WindowsAgentHubProps {
   onNavigateToAgentChat?: (agentId: string) => void;
-  onOpenInstallGuide?: (tab?: 'linux' | 'windows' | 'docker' | 'worker' | 'python' | 'socks') => void;
 }
 
-export const WindowsAgentHub: React.FC<WindowsAgentHubProps> = ({ onNavigateToAgentChat, onOpenInstallGuide }) => {
+export const WindowsAgentHub: React.FC<WindowsAgentHubProps> = ({ onNavigateToAgentChat }) => {
   // Etelaate Karbare fa'al va Token e ekhtesasiye in Karbar
   const [userProfile, setUserProfile] = useState(INITIAL_USER_PROFILE);
   const [connectedAgents, setConnectedAgents] = useState<ConnectedAgent[]>(INITIAL_CONNECTED_AGENTS.filter(a => a.type === 'windows'));
@@ -289,19 +288,10 @@ export const WindowsAgentHub: React.FC<WindowsAgentHubProps> = ({ onNavigateToAg
               <span>{copiedPs ? 'کپی شد!' : 'کپی دستور کاربر'}</span>
             </button>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+          <div className="pt-1">
             <p className="text-[11px] text-neutral-400">
               💡 این دستور دارای پارامترهای <code className="text-purple-300 font-mono">-Token</code> و <code className="text-purple-300 font-mono">-User</code> مختص شماست؛ با اجرای آن، ایجنت فوراً به این پنل متصل شده و آماده ارسال و دریافت دستور می‌شود.
             </p>
-            {onOpenInstallGuide && (
-              <button
-                onClick={() => onOpenInstallGuide('windows')}
-                className="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
-              >
-                <span>راهنمای تفصیلی و رفع خطای پاورشل</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
         </div>
 
