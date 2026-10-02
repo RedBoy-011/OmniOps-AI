@@ -1,7 +1,6 @@
 # ==============================================================================
-# OmniOps AI - Windows Desktop Agent Installer (PowerShell)
-# One-liner automated bootstrap for Windows 10 & 11
-# Inspired by Louis-CFM/coucou desktop companion
+# OmniOps AI - Windows Desktop Companion Agent Installer (PowerShell)
+# Official Desktop Agent Bridge for Windows 10 & 11
 # ==============================================================================
 # Usage:
 #   irm https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/windows-agent/install-agent.ps1 | iex
@@ -9,13 +8,13 @@
 
 Write-Host ""
 Write-Host " ==============================================================" -ForegroundColor Cyan
-Write-Host "   OmniOps AI - Windows Desktop Agent (Coucou Companion)       " -ForegroundColor Green
+Write-Host "   OmniOps AI - Windows Desktop Companion Agent                " -ForegroundColor Green
 Write-Host "   Distributed AI Desktop Gateway Setup                        " -ForegroundColor White
 Write-Host " ==============================================================" -ForegroundColor Cyan
 Write-Host ""
 
 $InstallDir = "$env:LOCALAPPDATA\OmniOpsAI"
-$AgentScriptPath = "$InstallDir\coucou_agent.py"
+$AgentScriptPath = "$InstallDir\omniops_agent.py"
 $PythonExe = "python.exe"
 
 # 1. Sakhtane Directory dar AppData
@@ -39,12 +38,12 @@ if (-not $PythonCheck) {
 Write-Host "[3/5] Installing agent dependencies (websockets, psutil)..." -ForegroundColor Yellow
 & python -m pip install --quiet --upgrade pip websockets psutil
 
-# 4. Download kardane coucou_agent.py
-Write-Host "[4/5] Downloading latest OmniOps Coucou Agent client..." -ForegroundColor Yellow
-$AgentUrl = "https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/windows-agent/coucou_agent.py"
+# 4. Download kardane omniops_agent.py
+Write-Host "[4/5] Downloading latest OmniOps Windows Companion client..." -ForegroundColor Yellow
+$AgentUrl = "https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/windows-agent/omniops_agent.py"
 try {
     Invoke-WebRequest -Uri $AgentUrl -OutFile $AgentScriptPath -UseBasicParsing
-    Write-Host "[+] coucou_agent.py downloaded successfully." -ForegroundColor Green
+    Write-Host "[+] omniops_agent.py downloaded successfully." -ForegroundColor Green
 } catch {
     Write-Warning "Could not download remote agent script. Generating local offline runner..."
 }
@@ -55,7 +54,7 @@ $BatchLauncher = "$InstallDir\run_omniops_agent.bat"
 "@echo off
 title OmniOps AI Windows Agent
 cd /d $InstallDir
-python coucou_agent.py
+python omniops_agent.py
 pause" | Out-File -Encoding ASCII $BatchLauncher
 
 # Sakhtane Shortcut dar Desktop

@@ -11,7 +11,7 @@ export const HermesAgentHub: React.FC = () => {
   const tools = [
     { id: 'bash_sandbox', name: 'Bash Sandbox', desc: 'اجرای دستورات خط فرمان لینوکس در کانتینر ایزوله امن', icon: Terminal, active: true },
     { id: 'python_runner', name: 'Python Runner', desc: 'اجرای اسکریپت‌های پایتون برای محاسبات و تحلیل داده', icon: FileText, active: true },
-    { id: 'desktop_rpc', name: 'Windows Desktop RPC', desc: 'ارسال دستور و نوتیفیکیشن به ایجنت دسکتاپ Coucou', icon: Laptop, active: true },
+    { id: 'desktop_rpc', name: 'Windows Desktop RPC', desc: 'ارسال دستور و نوتیفیکیشن به ایجنت دسکتاپ ویندوز', icon: Laptop, active: true },
     { id: 'database_query', name: 'DB Query Tool', desc: 'کوئری‌های مجاز و ایندکس‌گذاری دیتابیس Postgres', icon: Database, active: true },
     { id: 'web_fetch', name: 'Web Fetch & API', desc: 'دریافت مستندات و ریکوئست به اندپوینت‌های خارجی', icon: Globe, active: true },
   ];
@@ -25,7 +25,7 @@ export const HermesAgentHub: React.FC = () => {
       '[Reasoning] OmniRoute dispatched request to Llama 3.2 (Local Engine, Latency: 18ms). Plan formulated.',
       '[Tool Step 1/3] Calling bash_sandbox: df -h /var/lib/postgresql/data (Disk free: 48.2 GB)',
       '[Tool Step 2/3] Calling database_query: pg_dump --format=custom omniops_core (Backup completed: 24.6 MB)',
-      '[Tool Step 3/3] Calling desktop_rpc: Dispatching toast notification to OmniOps-Coucou-Workstation...',
+      '[Tool Step 3/3] Calling desktop_rpc: Dispatching toast notification to OmniOps-Windows-Workstation...',
       '[Hermes Agent] ✔ Autonomous Execution Completed with Zero Faults. Output reported to Master Control-Plane.'
     ];
 

@@ -1,1 +1,187 @@
 @import "tailwindcss";
+
+/* ==============================================================================
+ * Iranian B Series WebFonts Definition (@font-face baraye khanevadeye seri B)
+ * B Titr, B Yekan, B Nazanin, B Mitra
+ * ============================================================================== */
+
+/* 1. B Titr: Baraye Titrhaye Asli va H1/H2 */
+@font-face {
+  font-family: 'B Titr';
+  src: local('B Titr'), local('BTitr'), local('Titr'),
+       url('https://cdn.jsdelivr.net/npm/@raha.group/persian-fonts@1.0.3/Titr.bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 2. B Yekan: Baraye Zirtitrha, Dokmeha, Tabha va Body */
+@font-face {
+  font-family: 'B Yekan';
+  src: local('B Yekan'), local('BYekan'), local('Yekan'), local('yekan'),
+       url('https://cdn.jsdelivr.net/npm/@raha.group/persian-fonts@1.0.3/Yekan.regular.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/npm/yekan-font@1.0.0/fonts/Yekan.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'B Yekan';
+  src: local('B Yekan Bold'), local('BYekan Bold'), local('Yekan Bold'),
+       url('https://cdn.jsdelivr.net/npm/@raha.group/persian-fonts@1.0.3/Yekan.regular.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 3. B Nazanin & B Mitra: Baraye Matnhaye Sade va Towzihat */
+@font-face {
+  font-family: 'B Nazanin';
+  src: local('B Nazanin'), local('BNazanin'), local('Nazanin'),
+       url('https://cdn.jsdelivr.net/npm/@raha.group/persian-fonts@1.0.3/Nazanin.regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'B Mitra';
+  src: local('B Mitra'), local('BMitra'), local('Mitra'), local('B Nazanin'),
+       url('https://cdn.jsdelivr.net/npm/@raha.group/persian-fonts@1.0.3/Nazanin.regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ==============================================================================
+ * Senior Web Typographic Hierarchy (Me'mariye Fonte To-del-kar)
+ * ============================================================================== */
+
+:root {
+  /* Titr-haye asli: B Titr ba fallback e B Yekan */
+  --font-heading-main: 'B Titr', 'BTitr', 'Titr', 'B Yekan', 'BYekan', sans-serif;
+  /* Zirtitr-ha, label-ha, dokme-ha: B Yekan */
+  --font-subheading: 'B Yekan', 'BYekan', 'Yekan', 'yekan', sans-serif;
+  /* Matne sade va body: B Yekan ba fallback e B Nazanin va Mitra */
+  --font-body: 'B Yekan', 'BYekan', 'Yekan', 'B Nazanin', 'BNazanin', 'B Mitra', sans-serif;
+  /* Code va telemetri */
+  --font-code: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  * {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  
+  html, body, .font-sans {
+    font-family: var(--font-body) !important;
+    background-color: #09090b;
+    color: #f4f4f5;
+    overflow-x: hidden;
+    line-height: 1.7;
+    letter-spacing: normal;
+  }
+
+  /* 1. Titrhaye Asli (H1, H2, Onvanhaye Bozorg): B Titr */
+  h1, h2, .font-titr {
+    font-family: var(--font-heading-main) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+  }
+
+  /* 2. Zirtitrhaye Bakhsh-ha (H3, H4, H5, H6, Card Headers): B Yekan Bold */
+  h3, h4, h5, h6, .font-subtitr {
+    font-family: var(--font-subheading) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em;
+    line-height: 1.45;
+  }
+
+  /* 3. Matne sade, dokme-ha, form input-ha, label-ha: B Yekan / B Nazanin */
+  p, span, label, input, button, select, textarea, div, a, td, th {
+    font-family: var(--font-body);
+  }
+
+  button, input, select, textarea {
+    font-family: var(--font-subheading);
+  }
+
+  /* 4. Code, Terminal, Hash, Latency, Token: JetBrains Mono */
+  code, pre, .font-mono, .font-mono * {
+    font-family: var(--font-code) !important;
+  }
+}
+
+/* Glassmorphism Design System Utilities (Classhaye shishei va blur) */
+.glass-surface {
+  background: rgba(18, 18, 24, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-surface-subtle {
+  background: rgba(24, 24, 32, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-surface-elevated {
+  background: rgba(28, 28, 38, 0.75);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.5);
+}
+
+.glass-input {
+  background: rgba(12, 12, 18, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--font-body);
+}
+
+.glass-input:focus {
+  background: rgba(16, 16, 26, 0.85);
+  border-color: rgba(6, 182, 212, 0.6);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+  outline: none;
+}
+
+/* Subtle glow effects */
+.glow-cyan {
+  box-shadow: 0 0 35px -5px rgba(6, 182, 212, 0.25);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 35px -5px rgba(168, 85, 247, 0.25);
+}
+
+.glow-purple {
+  box-shadow: 0 0 35px -5px rgba(168, 85, 247, 0.25);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(9, 9, 11, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

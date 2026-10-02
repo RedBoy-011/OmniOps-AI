@@ -227,9 +227,9 @@ export const AIProvidersHub: React.FC = () => {
   };
 
   return (
-    <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-6 shadow-2xl space-y-8" dir="rtl">
+    <div className="glass-surface-elevated border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-8" dir="rtl">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-neutral-800">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
           <div className="flex items-center gap-2 text-xs text-neutral-400 font-mono mb-1">
             <span className="text-emerald-400 font-semibold">Local & Cloud Ecosystem</span>

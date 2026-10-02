@@ -372,7 +372,7 @@ show_architecture_menu() {
             "2" "Install OmniRoute Core Only (AI Processing & Model Router on :8000)" \
             "3" "Install Hermes Agent Only (Execution Arm & Tool Sandbox on :8081)" \
             "4" "Install Edge/Worker Node (Local LLM, GPU & Mesh Agent on :9090)" \
-            "5" "Install Windows Agent Backend (Coucou Desktop Gateway on :7070)" \
+            "5" "Install Windows Agent Backend (Desktop Gateway on :7070)" \
             3>&1 1>&2 2>&3) || {
                 log_warn "Entekhab cancel shod. Khorooj."
                 exit 0
@@ -394,7 +394,7 @@ show_architecture_menu() {
         echo -e "  ${CLR_BOLD}4)${CLR_RESET} ${CLR_BLUE}Install Edge/Worker Node${CLR_RESET}"
         echo -e "     ${CLR_DIM}(Nasbe node e labeh baraye ertebate amn e mTLS, GPU local LLM va vLLM/Ollama)${CLR_RESET}"
         echo ""
-        echo -e "  ${CLR_BOLD}5)${CLR_RESET} ${CLR_MAGENTA}Install Windows Agent Backend (Coucou Gateway)${CLR_RESET}"
+        echo -e "  ${CLR_BOLD}5)${CLR_RESET} ${CLR_MAGENTA}Install Windows Agent Backend (Desktop Gateway)${CLR_RESET}"
         echo -e "     ${CLR_DIM}(Nasbe pishniazhaye ertebat ba Desktop Agent, Reverse Tunnel va WebSocket Proxy)${CLR_RESET}"
         echo -e "${CLR_CYAN}----------------------------------------------------------------------${CLR_RESET}"
 

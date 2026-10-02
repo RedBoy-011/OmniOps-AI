@@ -48,7 +48,7 @@ export const DevOpsDocs: React.FC = () => {
           <div>git update-index --chmod=+x install.sh</div>
           <div className="text-emerald-400"># ۲. اضافه کردن فایل‌های ویندوز ایجنت</div>
           <div>git add install.sh windows-agent/</div>
-          <div>git commit -m "feat: add OmniOps AI Linux installer and Windows Coucou companion"</div>
+          <div>git commit -m "feat: add OmniOps AI Linux installer and Windows desktop companion"</div>
           <div>git branch -M main</div>
           <div>git remote add origin https://github.com/RedBoy-011/OmniOps-AI.git</div>
           <div>git push -u origin main</div>

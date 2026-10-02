@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Server,
   Route,
@@ -11,18 +11,60 @@ import {
   Github,
   BookOpen,
   Copy,
-  Check
+  Check,
+  Cpu,
+  Layers,
+  Bot,
+  Laptop,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Menu,
+  X,
+  ShieldCheck,
+  Activity,
+  Terminal
 } from 'lucide-react';
 import { AuthScreen } from './components/AuthScreen';
-import { ClusterOverview } from './components/ClusterOverview';
+import { MasterControlDashboard } from './components/MasterControlDashboard';
+import { OmniAgentInterface } from './components/OmniAgentInterface';
+import { MCPMarketplace } from './components/MCPMarketplace';
 import { OmniRouteHub } from './components/OmniRouteHub';
-import { HermesAgentHub } from './components/HermesAgentHub';
 import { AIProvidersHub } from './components/AIProvidersHub';
+import { WindowsAgentHub } from './components/WindowsAgentHub';
+import { UserPortal } from './components/UserPortal';
+import { OneLinerInstallGuideModal } from './components/OneLinerInstallGuideModal';
 import { RAW_INSTALL_SCRIPT } from './data/installScript';
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<{ email: string; role: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'omniroute' | 'hermes' | 'providers'>('overview');
+  // In state baraye etelaate karbare vared-shode ast
+  const [currentUser, setCurrentUser] = useState<{ email: string; role: string } | null>({
+    email: 'admin@omniops.ai',
+    role: 'Master Cluster Administrator'
+  });
+
+  // Modal e Dastoorate Tak-khattiye Nasb
+  const [installGuideOpen, setInstallGuideOpen] = useState(false);
+  const [installGuideTab, setInstallGuideTab] = useState<'linux' | 'windows' | 'docker' | 'worker' | 'python' | 'socks'>('linux');
+
+  // Tab e fa'ale barname (Master Dashboard, Agent Chat, MCP, OmniRoute, Providers, Windows Agent)
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'agent' | 'mcp' | 'omniroute' | 'providers' | 'windows'>('dashboard');
+
+  // Eyjente Entekhab-shode baraye ertebat va ersale dastoor
+  const [selectedAgentForChat, setSelectedAgentForChat] = useState<string>('agent-win-workstation');
+
+  const handleNavigateToAgentChat = (agentId?: string) => {
+    if (agentId) {
+      setSelectedAgentForChat(agentId);
+    }
+    setActiveTab('agent');
+  };
+
+  // Sidebar e jam-shavande (Collapsible Glass Sidebar)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Kopi kardane dastoor e curl
   const [copiedCurl, setCopiedCurl] = useState(false);
 
   const officialCurlCommand = 'curl -sL https://raw.githubusercontent.com/RedBoy-011/OmniOps-AI/main/install.sh | bash';
@@ -45,178 +87,342 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // اگر کاربر هنوز لاگین نکرده باشد، صفحه لاگین نمایش داده می‌شود
+  // Agar karbar logout kard, safheye AuthScreen namayesh dade mishavad
   if (!currentUser) {
     return <AuthScreen onLoginSuccess={(user) => setCurrentUser(user)} />;
   }
 
+  // Agar Karbare Ma'mooli (Standard User) vared shod, faghat UserPortal namayesh dade mishavad!
+  // Karbare ma'mooli be tanzimate klastar dastresi nadarad va faghat chathaye khodesh, modelha va eyjente vayndoziye khodesh ra mibinad
+  if (currentUser.role === 'Standard User') {
+    return (
+      <UserPortal
+        currentUser={currentUser}
+        onLogout={() => setCurrentUser(null)}
+        onSwitchToAdmin={() => setCurrentUser({ email: 'admin@omniops.ai', role: 'Master Cluster Administrator' })}
+      />
+    );
+  }
+
+  // Aytamhaye Menuye Asli e Sidebar
+  const navigationItems = [
+    {
+      id: 'dashboard',
+      label: 'داشبورد مرکزی',
+      englishLabel: 'Master Dashboard',
+      icon: Server,
+      badge: 'Online'
+    },
+    {
+      id: 'agent',
+      label: 'رابط ایجنت و چت',
+      englishLabel: 'Omni Agent & Task',
+      icon: Bot,
+      badge: 'DeepSeek V4'
+    },
+    {
+      id: 'mcp',
+      label: 'بازارچه مهارت‌ها (MCP)',
+      englishLabel: 'MCP Marketplace',
+      icon: Layers,
+      badge: '8 Servers'
+    },
+    {
+      id: 'omniroute',
+      label: 'هسته پردازشی OmniRoute',
+      englishLabel: 'OmniRoute Core',
+      icon: Route,
+      badge: 'Port :8000'
+    },
+    {
+      id: 'providers',
+      label: 'پرووایدرها و SOCKS5',
+      englishLabel: 'AI Providers & Proxy',
+      icon: Zap,
+      badge: 'Anti-Filter'
+    },
+    {
+      id: 'windows',
+      label: 'ایجنت دسکتاپ ویندوز',
+      englishLabel: 'Windows Companion',
+      icon: Laptop,
+      badge: 'Win 11'
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans selection:bg-emerald-500/20 selection:text-emerald-300" dir="rtl">
-      {/* هدر بالای پنل مدیریت کلاستر - ۳ ناحیه استاندارد و بدون منوهای اضافه */}
-      <header className="sticky top-0 z-50 bg-neutral-950/95 backdrop-blur-md border-b border-neutral-800/80 px-4 lg:px-8 py-3 flex items-center justify-between">
-        {/* ۱. برند و وضعیت زنده */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-mono tracking-wider font-extrabold text-emerald-400 text-base" dir="ltr">OmniOps AI</span>
-            <span className="text-neutral-500 font-normal text-xs hidden sm:inline">|</span>
-            <span className="text-neutral-300 text-xs font-medium hidden sm:inline">Master Control-Plane Web Console</span>
+    <div className="min-h-screen bg-[#09090b] text-neutral-100 flex relative selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden" dir="rtl">
+      
+      {/* Pas-zamineye noorani ba Haloohaye Glassmorphism (Ambient Background Mesh) */}
+      <div className="fixed top-[-15%] right-[-10%] w-[650px] h-[650px] rounded-full bg-cyan-600/10 blur-[140px] pointer-events-none" />
+      <div className="fixed bottom-[-15%] left-[-10%] w-[700px] h-[700px] rounded-full bg-indigo-600/10 blur-[150px] pointer-events-none" />
+      <div className="fixed top-1/2 left-1/4 w-[450px] h-[450px] rounded-full bg-emerald-600/08 blur-[130px] pointer-events-none" />
+
+      {/* Grid Pattern pas-zamine */}
+      <div className="fixed inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+
+      {/* 1. Sidebar e Shishei va Jam-Shavande (Collapsible Frosted Glass Sidebar) */}
+      <aside
+        className={`hidden md:flex flex-col justify-between sticky top-0 h-screen z-40 transition-all duration-300 glass-surface-elevated border-l border-white/10 ${
+          sidebarCollapsed ? 'w-20' : 'w-64'
+        }`}
+      >
+        {/* Top: Logo va Brand */}
+        <div className="p-4 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-indigo-500/20 border border-cyan-500/30 text-cyan-400 shrink-0 shadow-lg shadow-cyan-950/50">
+                <Cpu className="w-5 h-5" />
+              </div>
+              {!sidebarCollapsed && (
+                <div className="leading-tight truncate animate-in fade-in duration-200">
+                  <span className="font-extrabold text-sm text-white font-mono block tracking-tight" dir="ltr">
+                    OmniOps Enterprise
+                  </span>
+                  <span className="text-[10px] text-neutral-400 block font-mono">
+                    AI Operating System
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Dokmeye Jam/Baz kardane Sidebar */}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-1.5 rounded-xl hover:bg-white/10 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+              title={sidebarCollapsed ? 'گسترش منو' : 'جمع کردن منو'}
+            >
+              {sidebarCollapsed ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            </button>
           </div>
+
+          {/* Menuye Asli */}
+          <nav className="space-y-1.5">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as any)}
+                  className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all duration-200 cursor-pointer text-xs font-semibold relative group ${
+                    isActive
+                      ? 'bg-gradient-to-r from-cyan-600/30 to-indigo-600/20 text-white border border-cyan-500/40 shadow-lg shadow-cyan-950/40 font-bold'
+                      : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                  title={sidebarCollapsed ? item.label : undefined}
+                >
+                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-cyan-400' : 'text-neutral-400 group-hover:text-neutral-200'}`} />
+                  
+                  {!sidebarCollapsed && (
+                    <div className="flex-1 flex items-center justify-between truncate animate-in fade-in duration-150">
+                      <span className="truncate">{item.label}</span>
+                      {item.badge && (
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono font-medium ${
+                          isActive ? 'bg-cyan-500/30 text-cyan-300' : 'bg-neutral-800 text-neutral-400'
+                        }`}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Khat e neshan-dahandeye fa'al boodan */}
+                  {isActive && (
+                    <span className="absolute right-0 top-2 bottom-2 w-1 bg-cyan-400 rounded-l-full" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
         </div>
 
-        {/* ۲. منوی اصلی ۴گانه و کاملاً کاربردی (حذف تب‌های اضافه) */}
-        <nav className="hidden md:flex items-center gap-1.5 bg-neutral-900/90 p-1 rounded-xl border border-neutral-800 text-xs font-medium text-neutral-400">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'overview' ? 'bg-neutral-800 text-white font-semibold shadow-sm' : 'hover:text-white'
-            }`}
-          >
-            <Server className="w-3.5 h-3.5 text-emerald-400" />
-            <span>داشبورد کلاستر</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('omniroute')}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'omniroute' ? 'bg-neutral-800 text-white font-semibold shadow-sm' : 'hover:text-white'
-            }`}
-          >
-            <Route className="w-3.5 h-3.5 text-cyan-400" />
-            <span>OmniRoute (هسته پردازشی)</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('hermes')}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'hermes' ? 'bg-neutral-800 text-white font-semibold shadow-sm' : 'hover:text-white'
-            }`}
-          >
-            <Wrench className="w-3.5 h-3.5 text-amber-400" />
-            <span>Hermes Agent (بازوی اجرایی)</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('providers')}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'providers' ? 'bg-neutral-800 text-white font-semibold shadow-sm' : 'hover:text-white'
-            }`}
-          >
-            <Zap className="w-3.5 h-3.5 text-emerald-400" />
-            <span>پرووایدرها و ساکس‌پراکسی</span>
-          </button>
-        </nav>
-
-        {/* ۳. بخش اقدام‌ها، دانلود اسکریپت و پروفایل مدیر */}
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={copyCurl}
-            className="hidden sm:flex px-2.5 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-800/80 rounded-lg transition-colors cursor-pointer items-center gap-1.5"
-            title="کپی دستور curl برای نصب در سرور"
-          >
-            {copiedCurl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span className="font-mono">curl | bash</span>
-          </button>
-
-          <button
-            onClick={downloadScriptFile}
-            className="px-2.5 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">دانلود install.sh</span>
-            <span className="sm:hidden">دانلود</span>
-          </button>
-
-          {/* اکانت کاربر */}
-          <div className="hidden lg:flex items-center gap-2 pr-2 border-r border-neutral-800 text-xs">
-            <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-              <User className="w-3.5 h-3.5" />
+        {/* Bottom: User Profile va Logout */}
+        <div className="p-4 border-t border-white/5 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 flex items-center justify-center font-bold text-xs shrink-0">
+              <User className="w-4 h-4" />
             </div>
-            <div className="text-right">
-              <span className="text-white font-medium block leading-none">{currentUser.email}</span>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="truncate text-right flex-1 animate-in fade-in duration-150">
+                <span className="text-white text-xs font-bold block truncate">{currentUser.email}</span>
+                <span className="text-[10px] text-emerald-400 font-mono block">SuperAdmin</span>
+              </div>
+            )}
           </div>
 
           <button
             onClick={() => setCurrentUser(null)}
-            className="p-1.5 text-neutral-400 hover:text-red-400 bg-neutral-900 hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
+            className="w-full py-2 px-3 rounded-xl bg-white/[0.03] hover:bg-red-950/40 hover:text-red-400 text-neutral-400 text-xs font-medium transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
             title="خروج از حساب کاربری"
           >
             <LogOut className="w-4 h-4" />
+            {!sidebarCollapsed && <span>خروج از پنل</span>}
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* منوی تاشو برای موبایل و تبلت - فقط ۴ گزینه اصلی و کاربردی */}
-      <div className="md:hidden flex items-center gap-1 px-4 py-2 bg-neutral-900 border-b border-neutral-800 overflow-x-auto text-xs text-neutral-400 scrollbar-none">
-        {[
-          { id: 'overview', label: 'داشبورد کلاستر', icon: Server },
-          { id: 'omniroute', label: 'OmniRoute Core', icon: Route },
-          { id: 'hermes', label: 'Hermes Agent', icon: Wrench },
-          { id: 'providers', label: 'پرووایدرها و ساکس', icon: Zap }
-        ].map((t) => {
-          const Icon = t.icon;
-          return (
+      {/* 2. Mohtavaye Asli (Main Workspace Content) */}
+      <div className="flex-1 flex flex-col min-w-0 z-10">
+        
+        {/* Topbar e Shishei (Glassmorphic Header Bar) */}
+        <header className="sticky top-0 z-30 glass-surface border-b border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between backdrop-blur-2xl">
+          
+          {/* Rast: Mobile Menu Toggle va Onvane Bakhsh */}
+          <div className="flex items-center gap-3">
             <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id as any)}
-              className={`px-3 py-1.5 rounded-lg shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                activeTab === t.id ? 'bg-neutral-800 text-white font-semibold shadow-sm' : 'hover:text-white'
-              }`}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-xl bg-neutral-900 border border-white/10 text-neutral-300 hover:text-white cursor-pointer"
             >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{t.label}</span>
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-          );
-        })}
+
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs sm:text-sm font-bold text-white tracking-tight">
+                {navigationItems.find(n => n.id === activeTab)?.label}
+              </span>
+              <span className="text-neutral-600 hidden sm:inline">|</span>
+              <span className="text-xs font-mono text-cyan-400 hidden sm:inline">
+                OpenRouter DeepSeek V4 Flash Active
+              </span>
+            </div>
+          </div>
+
+          {/* Chap: Dokmehaye Akshan (One-Liners Hub, User View, Curl, Download, Logout) */}
+          <div className="flex items-center gap-2">
+            
+            {/* Dokmeye Markaze Dastoorate Tak-khattiye Nasb */}
+            <button
+              onClick={() => { setInstallGuideTab('linux'); setInstallGuideOpen(true); }}
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-bold text-cyan-200 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm shadow-cyan-950/50"
+              title="مشاهده تمامی دستورات نصب تک‌خطی سرور، ویندوز، داکر و نودها همراه با راهنما"
+            >
+              <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+              <span>نصب تک‌خطی‌ها</span>
+              <span className="hidden xl:inline text-[9px] font-mono px-1 rounded bg-cyan-500/30 text-cyan-200">Hub</span>
+            </button>
+
+            {/* Dokmeye Taghir be Namaye Karbare Ma'mooli */}
+            <button
+              onClick={() => setCurrentUser({ email: 'user@omniops.ai', role: 'Standard User' })}
+              className="hidden lg:flex px-2.5 py-1.5 text-xs font-semibold text-purple-300 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/50 rounded-xl transition-all cursor-pointer items-center gap-1.5"
+              title="مشاهده محیط کاربر معمولی (فقط چت، مدل‌ها و ایجنت ویندوز خود)"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>نمای کاربر معمولی</span>
+            </button>
+
+            <button
+              onClick={copyCurl}
+              className="hidden sm:flex px-2.5 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/30 rounded-xl transition-all cursor-pointer items-center gap-1.5 shadow-sm font-mono"
+              title="کپی دستور رسمی curl برای نصب در سرور لینوکس"
+            >
+              {copiedCurl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>curl install.sh</span>
+            </button>
+
+            <button
+              onClick={downloadScriptFile}
+              className="px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-cyan-950/70"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">دانلود install.sh</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentUser(null)}
+              className="p-1.5 rounded-xl bg-red-950/30 hover:bg-red-900/40 text-red-300 border border-red-800/40 transition-colors cursor-pointer"
+              title="خروج از حساب"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
+
+        {/* Mobile Navigation Drawer (Baraye Gooshi va Tablet) */}
+        {mobileMenuOpen && (
+          <div className="md:hidden glass-surface-elevated border-b border-white/10 p-4 space-y-2 animate-in slide-in-from-top duration-200">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id as any);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl text-xs font-semibold ${
+                    isActive ? 'bg-cyan-600 text-white font-bold' : 'text-neutral-300 hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className="text-[10px] font-mono opacity-80">{item.badge}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Workspace Canvas (Mahalle Namayeshe Tab-ha) */}
+        <main className="flex-1 p-4 sm:p-7 max-w-7xl w-full mx-auto animate-in fade-in duration-300">
+          {activeTab === 'dashboard' && (
+            <MasterControlDashboard
+              onNavigateToTab={(tab, agentId) => {
+                if (tab === 'agent') {
+                  handleNavigateToAgentChat(agentId);
+                } else {
+                  setActiveTab(tab);
+                }
+              }}
+              onOpenInstallGuide={(tab) => {
+                if (tab) setInstallGuideTab(tab);
+                setInstallGuideOpen(true);
+              }}
+            />
+          )}
+
+          {activeTab === 'agent' && (
+            <OmniAgentInterface initialTargetAgentId={selectedAgentForChat} />
+          )}
+
+          {activeTab === 'mcp' && (
+            <MCPMarketplace />
+          )}
+
+          {activeTab === 'omniroute' && (
+            <OmniRouteHub />
+          )}
+
+          {activeTab === 'providers' && (
+            <AIProvidersHub />
+          )}
+
+          {activeTab === 'windows' && (
+            <WindowsAgentHub
+              onNavigateToAgentChat={handleNavigateToAgentChat}
+              onOpenInstallGuide={(tab) => {
+                if (tab) setInstallGuideTab(tab);
+                setInstallGuideOpen(true);
+              }}
+            />
+          )}
+        </main>
       </div>
 
-      {/* بدنه اصلی صفحات عملیاتی پنل */}
-      <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
-        {/* ۱. داشبورد اصلی کلاستر (شامل وضعیت سیستم، نودهای Edge و ایجنت‌های ویندوز) */}
-        {activeTab === 'overview' && (
-          <ClusterOverview onNavigateToTab={(tab) => setActiveTab(tab)} />
-        )}
+      {/* Modal e Jame'e Dastoorate Tak-khattiye Nasb va Rahnamaye Esteghrar */}
+      <OneLinerInstallGuideModal
+        isOpen={installGuideOpen}
+        onClose={() => setInstallGuideOpen(false)}
+        initialTab={installGuideTab}
+      />
 
-        {/* ۲. هسته پردازشی و روتر هوشمند OmniRoute */}
-        {activeTab === 'omniroute' && (
-          <OmniRouteHub />
-        )}
-
-        {/* ۳. بازوی اجرایی و سندباکس ابزارهای Hermes Agent */}
-        {activeTab === 'hermes' && (
-          <HermesAgentHub />
-        )}
-
-        {/* ۴. اتصال به پرووایدرها، تنظیمات ساکس‌پراکسی و پیکربندی خودکار */}
-        {activeTab === 'providers' && (
-          <AIProvidersHub />
-        )}
-      </main>
-
-      {/* فوتر مینیمال و آرام */}
-      <footer className="border-t border-neutral-800/80 px-4 lg:px-8 py-3.5 bg-neutral-950 text-xs text-neutral-500 flex flex-wrap items-center justify-between gap-4 max-w-7xl mx-auto w-full">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-neutral-400 font-semibold" dir="ltr">OmniOps AI</span>
-          <span>·</span>
-          <span>RedBoy-011/OmniOps-AI</span>
-          <span>·</span>
-          <span>v2.4.0-stable</span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <a
-            href="https://github.com/RedBoy-011/OmniOps-AI"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-neutral-300 transition-colors flex items-center gap-1.5 text-neutral-400"
-          >
-            <Github className="w-3.5 h-3.5" />
-            <span>GitHub Repository</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
-        </div>
-      </footer>
     </div>
   );
 }

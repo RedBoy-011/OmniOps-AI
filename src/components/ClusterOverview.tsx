@@ -72,7 +72,7 @@ export const ClusterOverview: React.FC<ClusterOverviewProps> = ({ onNavigateToTa
               کنترل‌پنل مرکزی سیستم‌عامل توزیع‌شده هوش مصنوعی (Master Control-Plane)
             </h2>
             <p className="text-xs text-neutral-400 mt-1">
-              پایش لحظه‌ای نودهای سرور مرکزی، ورکر‌های پردازش هوش مصنوعی (Edge) و همیارهای دسکتاپ ویندوز (Coucou Agents)
+              پایش لحظه‌ای نودهای سرور مرکزی، ورکر‌های پردازش هوش مصنوعی (Edge) و همیارهای دسکتاپ ویندوز (Windows Desktop Agents)
             </p>
           </div>
 
@@ -131,7 +131,7 @@ export const ClusterOverview: React.FC<ClusterOverviewProps> = ({ onNavigateToTa
                 <Laptop className="w-3.5 h-3.5 text-purple-400" />
                 <span>دستور نصب ایجنت ویندوز (PowerShell)</span>
               </span>
-              <span className="text-[10px] font-mono text-purple-400">Coucou Architecture</span>
+              <span className="text-[10px] font-mono text-purple-400">Windows Companion</span>
             </div>
             <div className="p-2 bg-black border border-neutral-800 rounded-lg flex items-center justify-between gap-2 text-xs font-mono text-purple-300" dir="ltr">
               <span className="truncate select-all">{psCommand}</span>
@@ -238,12 +238,12 @@ export const ClusterOverview: React.FC<ClusterOverviewProps> = ({ onNavigateToTa
         </div>
       </div>
 
-      {/* جدول ۲: ایجنت‌های دسکتاپ ویندوز متصل (Coucou Desktop Agents) */}
+      {/* جدول ۲: ایجنت‌های دسکتاپ ویندوز متصل (Windows Desktop Agents) */}
       <div className="p-5 rounded-2xl bg-neutral-900/60 border border-neutral-800 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Laptop className="w-4 h-4 text-purple-400" />
-            <h3 className="text-sm font-bold text-white">ایجنت‌های دسکتاپ ویندوز متصل (Coucou Desktop Companion)</h3>
+            <h3 className="text-sm font-bold text-white">ایجنت‌های دسکتاپ ویندوز متصل (Windows Desktop Companion)</h3>
           </div>
           <button
             onClick={() => onNavigateToTab('winagent')}
@@ -268,7 +268,7 @@ export const ClusterOverview: React.FC<ClusterOverviewProps> = ({ onNavigateToTa
             </thead>
             <tbody className="divide-y divide-neutral-800">
               <tr className="hover:bg-neutral-900/40">
-                <td className="p-3 font-mono text-purple-300 font-bold" dir="ltr">OmniOps-Coucou-Workstation</td>
+                <td className="p-3 font-mono text-purple-300 font-bold" dir="ltr">OmniOps-Windows-Workstation</td>
                 <td className="p-3">Windows 11 Pro (Build 22631)</td>
                 <td className="p-3 font-mono text-neutral-400" dir="ltr">Reverse WebSocket :7070</td>
                 <td className="p-3 font-mono" dir="ltr">CPU: 18% | RAM: 14.2 / 32 GB</td>
